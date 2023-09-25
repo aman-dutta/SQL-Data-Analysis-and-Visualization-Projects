@@ -179,8 +179,84 @@ INNER JOIN people p
 	on a.c_id = p.id
 
 
+/*
+	employee_checkin_details:
+		  employeeid ,entry_details, timestamp_details 
+		  1000 , login , 2023-06-16 01:00:15.34
+		  1000 , login , 2023-06-16 02:00:15.34
+		  1000 , login , 2023-06-16 03:00:15.34
+		  1000 , logout , 2023-06-16 12:00:15.34
+		  1001 , login , 2023-06-16 01:00:15.34
+		  1001 , login , 2023-06-16 02:00:15.34
+		  1001 , login , 2023-06-16 03:00:15.34
+		  1001 , logout , 2023-06-16 12:00:15.34
+
+	employee_details:
+		employeeid , phone_number , isdefault
+		1001 ,9999 , false
+		1001 ,1111 , false
+		1001 ,2222 , true
+		1003 ,3333 , false
 
 
+		Write an sql code to find output table as below:
+			employeeid, emplooyee_default_phone_number, total_entry, total_logout, latest_login, latest_logout
+
+
+		SCRIPT: 
+
+				CREATE TABLE employee_checkin_details(
+			employeeid        INTEGER  NOT NULL  
+			,entry_details     VARCHAR(8) NOT NULL
+			,timestamp_details Datetime NOT NULL
+			);
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1000,'login','2023-06-16 01:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1000,'login','2023-06-16 02:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1000,'login','2023-06-16 03:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1000,'logout','2023-06-16 12:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1001,'login','2023-06-16 01:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1001,'login','2023-06-16 02:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1001,'login','2023-06-16 03:00:15.34');
+			INSERT INTO employee_checkin_details(employeeid,entry_details,timestamp_details) VALUES (1001,'logout','2023-06-16 12:00:15.34');
+
+			CREATE TABLE employee_details(
+			employeeid   INTEGER  NOT NULL
+			,phone_number INTEGER 
+			,isdefault    VARCHAR(6) 
+			);
+
+			INSERT INTO employee_details(employeeid,phone_number,isdefault) VALUES (1001,9999,'false');
+			INSERT INTO employee_details(employeeid,phone_number,isdefault) VALUES (1001,1111,'false');
+			INSERT INTO employee_details(employeeid,phone_number,isdefault) VALUES (1001,2222,'true');
+			INSERT INTO employee_details(employeeid,phone_number,isdefault) VALUES (1003,3333,'false');
+
+			SELECT *
+			FROM employee_checkin_details;
+
+			SELECT *
+			FROM employee_details;
+
+*/
+
+with cte as (
+	SELECT employeeid, count(*) as total_entry,
+			sum(case when entry_details = 'login' then 1 end) as total_login,
+			sum(case when entry_details = 'logout' then 1 end) as total_logout,
+			max(case when entry_details = 'login' then timestamp_details end) as latest_login,
+			max(case when entry_details = 'logout' then timestamp_details end) as latest_logout
+	FROM employee_checkin_details
+	GROUP BY employeeid
+)
+
+SELECT a.employeeid, phone_number as default_phone_number,
+		total_entry,
+		total_login,
+		total_logout,
+		latest_login,
+		latest_logout
+FROM cte a
+LEFT JOIN employee_details b on a.employeeid  = b.employeeid
+WHERE isdefault = 'true'
 
 
 
